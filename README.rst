@@ -73,4 +73,4 @@ In your ``config.py``:
     # Discord Bot Token
     token = 'NzM3NzU5NjI1NTE2MTU1MDEw............'
 
-This bot assumes that your smtp and imap credentialsa are the same.
+This bot assumes that your smtp and imap credentials are the same.
