@@ -1,5 +1,4 @@
 asyncio
 discord.py
-aiosmtplib
 aioimaplib
 selectolax

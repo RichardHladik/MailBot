@@ -9,10 +9,6 @@
     :target: https://pypi.org/project/aioimaplib/
     :alt: aioimaplib
 
-.. image:: https://img.shields.io/badge/aiosmtplib-1.1.3-red
-    :target: https://pypi.org/project/aiosmtplib/
-    :alt: aiosmtplib
-
 .. image:: https://img.shields.io/github/license/0xCN/MailBot?color=gr
     :target: https://github.com/0xCN/MailBot/blob/master/LICENSE
     :alt: licence
@@ -37,7 +33,6 @@ Requirements:
 
     1. **discord.py**
     2. **aioimaplib**
-    3. **aiosmtplib**
     4. **selectolax**
 
 
