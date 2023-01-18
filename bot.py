@@ -1,5 +1,7 @@
+# -*- coding: utf8 -*-
 import os
 import email
+import email.policy
 import discord
 import asyncio
 from aioimaplib import aioimaplib
@@ -12,7 +14,8 @@ from config import (
     token,
 )
 
-client = discord.Client()
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
 imap_host = imap_host.split(":")
 
 
@@ -31,7 +34,16 @@ def get_text_selectolax(html):
     return text
 
 
-@asyncio.coroutine
+def simple_format(msg):
+    return msg.replace("\n>\n", "\n> \n")
+
+
+async def chunkize(channel, msg):
+    LIMIT = 2000
+    for i in range(0, len(msg), LIMIT):
+        await channel.send(msg[i : i + LIMIT])
+
+
 async def idle_loop(host, port, user, password):
     """
     This will loop to get new emails and send them to "mail_channel_id"
@@ -40,40 +52,36 @@ async def idle_loop(host, port, user, password):
     await imap_client.wait_hello_from_server()
     await imap_client.login(user, password)
     await imap_client.select()
+    await asyncio.sleep(5)
 
     while True:
         # only get emails which we haven't read
-        status, data = await imap_client.search("(UNSEEN)")
+        mail_channel = client.get_channel(mail_channel_id)
+
+        status, data = await imap_client.search("(ALL)")
+        data = [d.decode() for d in data]
         for i in data[0].split():
-            typ, mail = await imap_client.fetch(i, "(RFC822)")
+            typ, mail = await imap_client.fetch(str(i), "(RFC822)")
             mail_msg = email.message_from_bytes(mail[1], policy=email.policy.SMTP)
             mail_channel = client.get_channel(mail_channel_id)
 
-            # sending the email as a discord message
-            await mail_channel.send(
-                "```\n------------START-OF-MAIL-----------```"
-                f"```ini\n[From]: {mail_msg['from']}\n"
-                f"[Subject]: {mail_msg['subject']}\n"
-                f"[To]: {mail_msg['to']}\n"
-                f"[Date]: {mail_msg['date']}\n```"
+            msg_header = (
+                f"**From:** {mail_msg['from']}\n"
+                f"**Subject:** {mail_msg['subject']}\n"
+                f"**To:** {mail_msg['to']}\n"
+                f"**Date:** {mail_msg['date']}"
             )
 
+            msg_body = []
             for part in mail_msg.walk():
                 if part.get_content_type() == "text/plain":
-                    message = ""
-                    for line in part.get_content().splitlines():
-                        message += line + "\n"
+                    message = "\n".join(
+                        part.get_payload(decode=True).decode().splitlines()
+                    )
 
-                    message = get_text_selectolax(message.rstrip("\n"))
-                    # removing unicode character representations
-                    # not best practice, but works.
-                    message = "".join(i for i in message if ord(i) < 128)
-                    d_msg_len = 1992
-                    # cutting the email content so it-
-                    # doesn't reach discords message char limit
-                    for i in range(0, len(message), d_msg_len):
-                        msg_ = message[i : i + d_msg_len] + "-"
-                        await mail_channel.send(f"```\n{msg_}```")
+                    message = get_text_selectolax(message.strip("\n"))
+                    message = simple_format(message)
+                    msg_body.append(message)
 
                 if part.get_content_maintype() == "multipart":
                     continue
@@ -81,25 +89,8 @@ async def idle_loop(host, port, user, password):
                 if part.get("Content-Disposition") is None:
                     continue
 
-                file_name = part.get_filename()
-                file_raw = part.get_payload(decode=True)
-
-                if bool(file_name):
-                    file_path = os.path.join(f"{os.getcwd()}/attachments/", file_name)
-
-                    if not os.path.isfile(file_path):
-                        with open(file_path, "wb") as fp:
-                            fp.write(file_raw)
-
-                    # won't send files that's bigger than 8mb
-                    if len(file_raw) <= 8000000:
-                        await mail_channel.send(
-                            f"`{file_name}`", file=discord.File(file_path)
-                        )
-                    else:
-                        await mail_channel.send(f"{file_name} file too big")
-                    os.system("rm -r attachments/*")
-            await mail_channel.send("```\n-------------END-OF-MAIL------------```")
+            msg = msg_header + "\n\n" + "\n".join(msg_body)
+            await chunkize(mail_channel, msg)
 
         idle = await imap_client.idle_start(timeout=60)
         print((await imap_client.wait_server_push()))
@@ -112,5 +103,12 @@ async def on_ready():
     print("We have logged in as {0.user}".format(client))
 
 
-client.loop.create_task(idle_loop(imap_host[0], int(imap_host[1]), user, passwd))
-client.run(token)
+async def main():
+    async with client:
+        client.loop.create_task(
+            idle_loop(imap_host[0], int(imap_host[1]), user, passwd)
+        )
+        await client.start(token)
+
+
+asyncio.run(main())
