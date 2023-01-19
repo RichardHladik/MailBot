@@ -22,7 +22,7 @@ MailBot
     .. image:: /attachments/help.png
 
 
-``MailBot`` is a discord bot which forwards new emails to your discord server. This is a fork of [0xCN/MailBot](https://github.com/0xCN/MailBot) that deliberately doesn't support sending email.
+``MailBot`` is a discord bot which forwards new emails to your discord server. This is a fork of `0xCN/MailBot <https://github.com/0xCN/MailBot>`_ updated for current Discord API and Python 3.10 that deliberately doesn't support sending email.
 
 
 Installation
@@ -31,9 +31,9 @@ Installation
 Requirements:
 -------------
 
-    1. **discord.py**
-    2. **aioimaplib**
-    4. **selectolax**
+  1. **discord.py**
+  2. **aioimaplib**
+  3. **selectolax**
 
 
 Installation:
@@ -48,18 +48,4 @@ Installation:
 Config:
 --------------------------
 
-In your ``config.py``:
-
-.. code:: python
-
-    # Bot Command Prefix
-    pre = 'm!'
-    # Discord Channel IDs
-    mail_channel_id = 739137691681030197 
-    # host:port
-    imap_host = 'imap.gmail.com:993'
-    # AUTH for imap
-    user = 'test@gmail.com'
-    passwd = 'password123@'
-    # Discord Bot Token
-    token = 'NzM3NzU5NjI1NTE2MTU1MDEw............'
+See ``config.example.py``.
