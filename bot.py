@@ -66,9 +66,10 @@ async def idle_loop(host, port, user, password):
         # only get emails which we haven't read
         mail_channel = client.get_channel(mail_channel_id)
 
-        status, data = await imap_client.search("(ALL)")
+        status, data = await imap_client.search("(UNSEEN)")
         data = [d.decode() for d in data]
         for i in data[0].split():
+            print("Fetching msg {i}")
             typ, mail = await imap_client.fetch(str(i), "(RFC822)")
             mail_msg = email.message_from_bytes(mail[1], policy=email.policy.SMTP)
             mail_channel = client.get_channel(mail_channel_id)
