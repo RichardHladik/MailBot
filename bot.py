@@ -34,8 +34,16 @@ def get_text_selectolax(html):
     return text
 
 
+def strip_ending(t, pattern):
+    if t.endswith(pattern):
+        t = t[: -len(pattern)]
+    return t
+
+
 def simple_format(msg):
-    return msg.replace("\n>\n", "\n> \n")
+    msg = msg.replace("\n>\n", "\n> \n")
+    msg = strip_ending(msg, "\n>")
+    return msg
 
 
 async def chunkize(channel, msg):
@@ -79,7 +87,7 @@ async def idle_loop(host, port, user, password):
                         part.get_payload(decode=True).decode().splitlines()
                     )
 
-                    message = get_text_selectolax(message.strip("\n"))
+                    message = get_text_selectolax(message).strip("\n")
                     message = simple_format(message)
                     msg_body.append(message)
 
