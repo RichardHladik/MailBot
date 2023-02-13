@@ -112,11 +112,18 @@ async def on_ready():
     print("We have logged in as {0.user}".format(client))
 
 
+def on_error(event, *args, **kwargs):
+    message, *_ = args
+    print(message)
+    os._exit(1)
+
+
 async def main():
     async with client:
         client.loop.create_task(
             idle_loop(imap_host[0], int(imap_host[1]), user, passwd)
         )
+        client.loop.set_exception_handler(on_error)
         await client.start(token)
 
 
